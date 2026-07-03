@@ -42,6 +42,7 @@ mano lo que Vortex **no** puede auto-derivar.
 |--------|--------|----------------|
 | `grpc` | Llamada síncrona gRPC | Parcial |
 | `http` | Llamada síncrona REST/HTTP | Parcial |
+| `soap` | Llamada WCF/SOAP a otro servicio (legacy .NET Framework) | Sí (config WCF) |
 | `async-publish` | Publica a cola/topic | No → manifiesto |
 | `async-consume` | Consume de cola/topic | No → manifiesto |
 | `shared-data` | Comparte DB / Redis / Mongo | Sí |

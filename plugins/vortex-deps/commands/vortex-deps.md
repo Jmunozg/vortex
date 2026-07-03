@@ -13,26 +13,51 @@ en el repo.
 
 # Fase 1 — Auto-derivar (no preguntar)
 
-Escaneá el repo y detectá dependencias salientes reales:
+Escaneá el repo y detectá dependencias salientes reales. **Detectá primero el
+stack** por los archivos presentes (un repo puede ser .NET, Angular/Node, o ambos)
+y aplicá el bloque que corresponda.
 
-1. **NuGet interno (arista del grafo):** en todos los `*.csproj`, los
-   `<PackageReference>` de paquetes internos de la empresa.
+## Si es .NET / .NET Framework (`*.csproj` o `packages.config`)
+
+1. **NuGet interno (arista del grafo):** paquetes internos de la empresa, sea en
+   `<PackageReference>` de los `*.csproj` **o** en `packages.config` (.NET Framework).
    → `type: nuget`, `source: auto`, `confidence: high`, con `package` y `version`.
    Van en `depends_on`.
 
-2. **NuGet de tercero (inventario, NO arista):** el resto de `<PackageReference>`
-   (paquetes externos, ej. Newtonsoft, Serilog, EF Core). NO son aristas del grafo.
+2. **NuGet de tercero (inventario, NO arista):** el resto de paquetes (de `.csproj`
+   o `packages.config`, ej. Newtonsoft, Serilog, EF Core). NO son aristas del grafo.
    Guardá cada uno con `package` y `version` en la sección `third_party`.
-   Solo directas del `.csproj` (no resuelvas transitivas).
+   Solo directas (no resuelvas transitivas).
 
-3. **shared-data:** leé connection strings en `appsettings*.json`, `web.config` y
-   `docker-compose*.yml`. Cada DB/Redis/Mongo distinta es una arista.
+3. **shared-data:** leé connection strings en `appsettings*.json`, `web.config`,
+   `app.config` y `docker-compose*.yml`. Cada DB/Redis/Mongo distinta es una arista.
    → `type: shared-data`, `source: auto`, `confidence: high`, con `store`.
 
-4. **http / grpc (síncrono):** buscá `BaseAddress`, clientes Refit/`HttpClient`,
-   y clientes gRPC en `Program.cs` / `Startup.cs` / `appsettings*.json`.
-   → `type: http` o `grpc`, `source: auto`. Poné `confidence: medium` si el
-   destino se dedujo por heurística, `low` si vino de un patrón dudoso.
+4. **http / grpc / soap (síncrono):** buscá `BaseAddress`, clientes Refit/`HttpClient`
+   y clientes gRPC en `Program.cs` / `Startup.cs` / `Global.asax` / `appsettings*.json`
+   → `type: http` o `grpc`. En .NET Framework, los endpoints WCF en
+   `<system.serviceModel><client>` de `web.config` / `app.config` → `type: soap`.
+   `source: auto`; `confidence: medium` si el destino se dedujo por heurística,
+   `low` si vino de un patrón dudoso.
+
+## Si es Angular / Ionic / Node (`package.json`)
+
+Ionic usa el mismo `package.json` y `environment*.ts` que Angular; si ves
+`ionic.config.json` o `capacitor.config.*`, es Ionic pero aplica igual este bloque.
+
+5. **npm interno (arista del grafo):** en `package.json`, las `dependencies` que
+   sean librerías internas de la empresa (ver criterio abajo).
+   → `type: nuget`, `source: auto`, `confidence: high`, con `package` y `version`.
+   Van en `depends_on`. (Reusamos el tipo `nuget` como "paquete interno"; si Vortex
+   distingue ecosistemas, usá el campo para marcar que es npm.)
+
+6. **npm de tercero (inventario, NO arista):** el resto de `dependencies` y
+   `devDependencies`. Guardá cada una con `package` y `version` en `third_party`.
+   Solo directas del `package.json` (no resuelvas transitivas).
+
+7. **http (síncrono):** buscá URLs base de APIs en `src/environments/environment*.ts`
+   y en `proxy.conf.json`. Cada backend distinto es una arista.
+   → `type: http`, `source: auto`, `confidence: medium`.
 
 Para cada arista, resolvé el `target` a un slug de servicio consistente. Si no
 podés mapear el destino con certeza a un servicio conocido, NO la inventes:
@@ -63,10 +88,14 @@ Después de mostrar lo auto-derivado, preguntá de forma concreta y una cosa a l
 - Escribí YAML válido y ordenado (primero `nuget`/`shared-data`, luego síncronas,
   luego mensajería).
 - Escribí también la sección `third_party` (lista de `package` + `version` de los
-  NuGets externos). Va aparte de `depends_on`, no es parte del grafo.
-- Al final, mostrá un resumen: cuántas aristas por tipo, cuántos NuGets de tercero,
+  paquetes externos, NuGet o npm). Va aparte de `depends_on`, no es parte del grafo.
+- Al final, mostrá un resumen: cuántas aristas por tipo, cuántos paquetes de tercero,
   y cuáles quedaron marcadas para revisar.
 
-Tipos válidos: `grpc`, `http`, `async-publish`, `async-consume`, `shared-data`, `nuget`.
+Criterio "paquete interno" (para separar arista vs inventario): en npm, se consideran
+internas las librerías con scope de la empresa (ej. `@miorg/...`) o publicadas en el
+feed privado; el resto es tercero. Ajustá este criterio a la convención real del equipo.
+
+Tipos válidos: `grpc`, `http`, `soap`, `async-publish`, `async-consume`, `shared-data`, `nuget`.
 Valores de `source`: `auto`, `manifest`, `database-query`.
 Valores de `confidence`: `high`, `medium`, `low`.
