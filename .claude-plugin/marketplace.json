@@ -1,0 +1,17 @@
+{
+  "name": "vortex",
+  "owner": {
+    "name": "Vortex"
+  },
+  "metadata": {
+    "description": "Herramientas de Vortex para Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "vortex-deps",
+      "source": "./plugins/vortex-deps",
+      "description": "Genera o actualiza .vortex/dependencies.yaml por repositorio"
+    }
+  ]
+}
