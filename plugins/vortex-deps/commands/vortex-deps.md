@@ -81,6 +81,10 @@ Después de mostrar lo auto-derivado, preguntá de forma concreta y una cosa a l
 
 # Fase 3 — Escribir el archivo
 
+- **`solution:` es obligatorio y va primero.** Derívalo como slug normalizado del
+  nombre del repo (minúsculas, guiones; ej. `Andina_Backend_Dotnet` →
+  `andina-backend-dotnet`) y **confirmalo con el usuario** antes de escribir, porque
+  es lo que otros repos usan en `target:` para conectar las aristas. Nunca lo omitas.
 - Reglas del contrato: solo dependencias **salientes**; `source: auto` para lo
   derivado, `source: manifest` para lo que confirmó el usuario.
 - Si ya existe `.vortex/dependencies.yaml`, **conservá las entradas `manifest`**
