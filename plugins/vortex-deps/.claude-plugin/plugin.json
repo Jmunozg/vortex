@@ -1,6 +1,6 @@
 {
   "name": "vortex-deps",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Auto-deriva las dependencias de un repo (.csproj, appsettings, Program.cs) y arma el .vortex/dependencies.yaml; pregunta solo lo que no se puede inferir.",
   "author": {
     "name": "Vortex"
